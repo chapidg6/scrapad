@@ -1,29 +1,44 @@
 package com.example.scrapad.models;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import java.util.UUID;
+import java.util.List;
 
 @Entity
+@Table(name = "ad")
 public class Ad {
     @Id
     private UUID id;
     private String name;
     private Integer amount;
-    private Integer price;
+    private double price;
 
-    @ManyToOne
-    private Material material;
+   @ManyToMany(cascade = CascadeType.PERSIST, fetch = FetchType.LAZY)
+    @JoinTable(
+        name = "ad_material",
+        joinColumns = @JoinColumn(name = "ad_id"),
+        inverseJoinColumns = @JoinColumn(name = "material_id")
+    )
+    private List<Material> materials;
 
-    public Ad(UUID id, String name, Integer amount, Integer price, Material material) {
+    public Ad(UUID id, String name, Integer amount, double price, List <Material> materials) {
         super();
         this.id = id;
         this.name = name;
         this.amount = amount;
         this.price = price;
-        this.material = material;
+        this.materials = materials;
     }
 
     
@@ -54,21 +69,23 @@ public class Ad {
         this.amount = amount;
     }
 
-    public Integer getPrice() {
+    public double getPrice() {
         return price;
     }
 
-    public void setPrice(Integer price) {
+    public void setPrice(double price) {
         this.price = price;
     }
 
-    public Material getMaterial() {
-        return material;
+
+    public List<Material> getMaterials() {
+        return materials;
     }
 
-    public void setMaterial(Material material) {
-        this.material = material;
+
+    public void setMaterials(List<Material> materials) {
+        this.materials = materials;
     }
 
-    
+   
 }
