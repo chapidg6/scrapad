@@ -2,6 +2,8 @@ package com.example.scrapad.services;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+
 import com.example.scrapad.models.Ad;
 import com.example.scrapad.models.Material;
 import com.example.scrapad.repositories.AdRepository;
@@ -12,12 +14,17 @@ import com.opencsv.exceptions.CsvValidationException;
 
 import jakarta.transaction.Transactional;
 
+
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @Service
 public class AdService {
@@ -54,7 +61,7 @@ public class AdService {
                UUID adId = UUID.fromString(nextLine[0].trim());
                String adName = nextLine[1].trim();
                Integer adAmount = Integer.parseInt(nextLine[2].trim());
-               double adPrice = Double.parseDouble(nextLine[3].trim());
+               double adPrice = Double.parseDouble(nextLine[3].trim())/100;
                String materialName = nextLine[4].trim();
 
                // Verificar si el material ya existe 
@@ -100,6 +107,54 @@ public class AdService {
        }
        return null;
    }
+
+   public List<Map<String, ?>> searchAds(String term) {  
+    
+    List<Ad> resultAds = adRepository.searchAds(term);
+
+    // Convertir a lista de mapas para la respuesta JSON
+    return resultAds.stream()
+            .map(ad -> Map.of(
+                    "id", ad.getId().toString(),
+                    "name", ad.getName(),
+                    "amount", ad.getAmount(),
+                    "price", ad.getPrice()  
+            ))
+            .collect(Collectors.toList());
+}
+
+public Map<String, Object> getAdDetail(UUID adId) {
+    Optional<Ad> adOptional = adRepository.findById(adId);
+
+    if (adOptional.isPresent()) {
+        Ad ad = adOptional.get();
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", ad.getId());
+        response.put("name", ad.getName());
+        response.put("amount", ad.getAmount());
+        response.put("price", ad.getPrice());
+        response.put("relatedAds", getRelatedAds(ad));
+
+        return response;
+    } else {
+        return null; // Devuelve un Map vacío
+    }
+}
+
+private List<Map<String, Object>> getRelatedAds(Ad ad) {
+    List<Ad> relatedAds = adRepository.findRelatedAdsByMaterial(ad.getMaterials(), ad.getId());
+    return relatedAds.stream().map(this::mapAdToResponse).toList(); 
+}
+
+private Map<String, Object> mapAdToResponse(Ad ad) {
+    Map<String, Object> adResponse = new HashMap<>();
+    adResponse.put("id", ad.getId());
+    adResponse.put("name", ad.getName());
+    adResponse.put("amount", ad.getAmount());
+    adResponse.put("price", ad.getPrice());
+   
+    return adResponse;
+}
    /* 
    public void createAndSaveAd() {
     
@@ -123,5 +178,6 @@ public class AdService {
     // Guardar el anuncio utilizando el repositorio correspondiente
     adRepository.save(ad);
 }*/
+
 
 }
