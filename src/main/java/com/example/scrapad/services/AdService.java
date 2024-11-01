@@ -3,7 +3,8 @@ package com.example.scrapad.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+import com.example.scrapad.dtos.AdDTO;
+import com.example.scrapad.dtos.AdDetailDTO;
 import com.example.scrapad.models.Ad;
 import com.example.scrapad.models.Material;
 import com.example.scrapad.repositories.AdRepository;
@@ -108,72 +109,34 @@ public class AdService {
        }
    }
 
-   
-
-   private Map<String, Object> convertAdToMap(Ad ad) {
-    Map<String, Object> adMap = new HashMap<>();
-    adMap.put("id", ad.getId());
-    adMap.put("name", ad.getName());
-    adMap.put("amount", ad.getAmount());
-    adMap.put("price", ad.getPrice());
-    return adMap;
+   public AdDTO convertAdToDTO(Ad ad) {
+    return new AdDTO(ad.getId(), ad.getName(), ad.getAmount(), ad.getPrice());
 }
 
-   public List<Map<String, ?>> searchAds(String term) {  
+public List<AdDTO> searchAds(String term) {
     List<Ad> resultAds = adRepository.searchAds(term);
-
-    return resultAds.stream().map(this::convertAdToMap)
-    .collect(Collectors.toList());
+    return resultAds.stream().map(this::convertAdToDTO).collect(Collectors.toList());
 }
 
-public Map<String, Object> getAdDetail(UUID adId) {
+
+public AdDetailDTO getAdDetail(UUID adId) {
     Optional<Ad> adOptional = adRepository.findById(adId);
 
     if (adOptional.isPresent()) {
         Ad ad = adOptional.get();
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", ad.getId());
-        response.put("name", ad.getName());
-        response.put("amount", ad.getAmount());
-        response.put("price", ad.getPrice());
-        response.put("relatedAds", getRelatedAds(ad));
+        List<AdDTO> relatedAds = getRelatedAds(ad).stream().map(this::convertAdToDTO).collect(Collectors.toList());
 
-        return response;
+        return new AdDetailDTO(ad.getId(), ad.getName(), ad.getAmount(), ad.getPrice(), relatedAds);
     } else {
-        return null; // Devuelve un Map vacío
+        return null; 
     }
 }
 
-private List<Map<String, Object>> getRelatedAds(Ad ad) {
-    List<Ad> relatedAds = adRepository.findRelatedAdsByMaterial(ad.getMaterials(), ad.getId());
-
-    return relatedAds.stream().map(this::convertAdToMap).collect(Collectors.toList());
-
+private List<Ad> getRelatedAds(Ad ad) {
+    // Lógica para obtener anuncios relacionados
+    return adRepository.findRelatedAdsByMaterial(ad.getMaterials(), ad.getId());
 }
 
-   /* 
-   public void createAndSaveAd() {
-    
-    UUID adId = UUID.randomUUID();
-    String adName = "Ad Example";
-    Integer adAmount = 10;
-    double adPrice = 29.99;
-
-    
-    Material material1 = new Material("Material 1");
-    Material material2 = new Material("Material 2");
-
-    
-    List<Material> materials = new ArrayList<>();
-    materials.add(material1);
-    materials.add(material2);
-
-    
-    Ad ad = new Ad(adId, adName, adAmount, adPrice, materials);
-
-    // Guardar el anuncio utilizando el repositorio correspondiente
-    adRepository.save(ad);
-}*/
 
 
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.scrapad.dtos.AdDTO;
+import com.example.scrapad.dtos.AdDetailDTO;
 import com.example.scrapad.services.AdService;
 
 
@@ -23,19 +25,18 @@ public class AdController {
     private AdService adService;
 
     @GetMapping("/search")
-    public List<Map<String, ?>> searchAds(@RequestParam("term") String term) {
+    public List<AdDTO> searchAds(@RequestParam("term") String term) {
         return adService.searchAds(term);
     }
 
      @GetMapping("/addetail/{id}")
-     public ResponseEntity<Map<String, Object>> getAdDetail(@PathVariable("id") UUID adId) {
-        Map<String, Object> response = adService.getAdDetail(adId);
-        if (response == null || response.isEmpty()) {
-            // Si no se encuentra el anuncio, se duvuelve un 404
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                                 .body(Map.of("error", "Anuncio no encontrado"));
-        }
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<AdDetailDTO> getAdDetail(@PathVariable("id") UUID adId) {
+    AdDetailDTO response = adService.getAdDetail(adId);
+    if (response == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                             .body(null);
     }
+
+    return ResponseEntity.ok(response);
+}
 }
