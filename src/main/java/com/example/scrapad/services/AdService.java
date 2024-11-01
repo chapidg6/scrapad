@@ -41,6 +41,16 @@ public class AdService {
     private MaterialService materialService; 
 
 
+
+    // Método auxiliar para buscar un anuncio por ID en la lista temporal
+   private Ad findAdById(List<Ad> adList, UUID adId) {
+    for (Ad ad : adList) {
+        if (ad.getId().equals(adId)) {
+            return ad;
+        }
+    }
+    return null;
+}
       public void createAndSaveAdsFromCsv(String filePath) {
        // Lista temporal para almacenar los anuncios 
        List<Ad> adList = new ArrayList<>();
@@ -98,29 +108,22 @@ public class AdService {
        }
    }
 
-   // Método auxiliar para buscar un anuncio por ID en la lista temporal
-   private Ad findAdById(List<Ad> adList, UUID adId) {
-       for (Ad ad : adList) {
-           if (ad.getId().equals(adId)) {
-               return ad;
-           }
-       }
-       return null;
-   }
+   
+
+   private Map<String, Object> convertAdToMap(Ad ad) {
+    Map<String, Object> adMap = new HashMap<>();
+    adMap.put("id", ad.getId());
+    adMap.put("name", ad.getName());
+    adMap.put("amount", ad.getAmount());
+    adMap.put("price", ad.getPrice());
+    return adMap;
+}
 
    public List<Map<String, ?>> searchAds(String term) {  
-    
     List<Ad> resultAds = adRepository.searchAds(term);
 
-    // Convertir a lista de mapas para la respuesta JSON
-    return resultAds.stream()
-            .map(ad -> Map.of(
-                    "id", ad.getId().toString(),
-                    "name", ad.getName(),
-                    "amount", ad.getAmount(),
-                    "price", ad.getPrice()  
-            ))
-            .collect(Collectors.toList());
+    return resultAds.stream().map(this::convertAdToMap)
+    .collect(Collectors.toList());
 }
 
 public Map<String, Object> getAdDetail(UUID adId) {
@@ -143,18 +146,11 @@ public Map<String, Object> getAdDetail(UUID adId) {
 
 private List<Map<String, Object>> getRelatedAds(Ad ad) {
     List<Ad> relatedAds = adRepository.findRelatedAdsByMaterial(ad.getMaterials(), ad.getId());
-    return relatedAds.stream().map(this::mapAdToResponse).toList(); 
+
+    return relatedAds.stream().map(this::convertAdToMap).collect(Collectors.toList());
+
 }
 
-private Map<String, Object> mapAdToResponse(Ad ad) {
-    Map<String, Object> adResponse = new HashMap<>();
-    adResponse.put("id", ad.getId());
-    adResponse.put("name", ad.getName());
-    adResponse.put("amount", ad.getAmount());
-    adResponse.put("price", ad.getPrice());
-   
-    return adResponse;
-}
    /* 
    public void createAndSaveAd() {
     
